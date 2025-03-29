@@ -5,22 +5,22 @@ import { User, Calculator, LineChart, Target } from 'lucide-react';
 interface Step {
   id: number;
   title: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
 }
+
+const defaultIcons = [
+  <User className="w-5 h-5" />,
+  <Calculator className="w-5 h-5" />,
+  <Target className="w-5 h-5" />,
+  <LineChart className="w-5 h-5" />,
+];
 
 interface ProgressBarProps {
   currentStep: number;
   steps: Step[];
 }
 
-const defaultSteps: Step[] = [
-  { id: 0, title: 'Informations personnelles', icon: <User className="w-5 h-5" /> },
-  { id: 1, title: 'Revenus et épargne', icon: <Calculator className="w-5 h-5" /> },
-  { id: 2, title: 'Paramètres de projection', icon: <Target className="w-5 h-5" /> },
-  { id: 3, title: 'Résultats', icon: <LineChart className="w-5 h-5" /> },
-];
-
-const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, steps = defaultSteps }) => {
+const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, steps }) => {
   return (
     <div className="w-full py-4">
       <div className="flex justify-between relative">
@@ -44,7 +44,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, steps = defaultS
               animate={{ scale: index === currentStep ? 1.1 : 1 }}
               transition={{ duration: 0.2 }}
             >
-              {step.icon}
+              {step.icon || defaultIcons[index]}
             </motion.div>
             <motion.p
               className={`mt-2 text-sm ${

@@ -88,7 +88,15 @@ const SimulatorWizard: React.FC = () => {
   return (
     <TooltipProvider>
       <div className="max-w-4xl mx-auto p-4">
-        <ProgressBar currentStep={currentStep} />
+        <ProgressBar 
+          currentStep={currentStep}
+          steps={[
+            { id: 0, title: 'Informations personnelles', icon: null },
+            { id: 1, title: 'Revenus et épargne', icon: null },
+            { id: 2, title: 'Paramètres de projection', icon: null },
+            { id: 3, title: 'Résultats', icon: null },
+          ]}
+        />
         
         <AnimatePresence mode="wait">
           <motion.div
