@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../lib/ui/tabs';
-import { Progress } from '../lib/ui/progress';
+import { AnimatePresence, motion } from 'framer-motion';
 import PersonalInfoForm from './steps/PersonalInfoForm';
 import IncomeAndSavingsForm from './steps/IncomeAndSavingsForm';
-import RetirementGoalsForm from './steps/RetirementGoalsForm';
 import ProjectionParamsForm from './steps/ProjectionParamsForm';
 import SimulationResults from './steps/SimulationResults';
+import ProgressBar from './ProgressBar';
+import { TooltipProvider } from './ui/tooltip';
 
 // Définition des étapes du workflow
 const STEPS = [
@@ -48,99 +48,62 @@ const DEFAULT_SIMULATION_DATA: SimulationData = {
 };
 
 const SimulatorWizard: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState<string>(STEPS[0].id);
+  const [currentStep, setCurrentStep] = useState(0);
   const [simulationData, setSimulationData] = useState<SimulationData>(DEFAULT_SIMULATION_DATA);
-  
-  // Calculer l'index de l'étape courante
-  const currentStepIndex = STEPS.findIndex(step => step.id === currentStep);
-  
-  // Calculer le pourcentage de progression
-  const progressPercentage = ((currentStepIndex + 1) / STEPS.length) * 100;
-  
-  // Fonction pour naviguer à l'étape suivante
+
+  const handleUpdate = (updates: Partial<SimulationData>) => {
+    setSimulationData(prev => ({ ...prev, ...updates }));
+  };
+
   const goToNextStep = () => {
-    if (currentStepIndex < STEPS.length - 1) {
-      setCurrentStep(STEPS[currentStepIndex + 1].id);
-    }
+    setCurrentStep(prev => Math.min(prev + 1, 3));
   };
-  
-  // Fonction pour naviguer à l'étape précédente
+
   const goToPreviousStep = () => {
-    if (currentStepIndex > 0) {
-      setCurrentStep(STEPS[currentStepIndex - 1].id);
+    setCurrentStep(prev => Math.max(prev - 1, 0));
+  };
+
+  const renderStep = () => {
+    const commonProps = {
+      data: simulationData,
+      onUpdate: handleUpdate,
+      onNext: goToNextStep,
+      onPrevious: goToPreviousStep,
+    };
+
+    switch (currentStep) {
+      case 0:
+        return <PersonalInfoForm {...commonProps} />;
+      case 1:
+        return <IncomeAndSavingsForm {...commonProps} />;
+      case 2:
+        return <ProjectionParamsForm {...commonProps} />;
+      case 3:
+        return <SimulationResults {...commonProps} />;
+      default:
+        return null;
     }
   };
-  
-  // Fonction pour mettre à jour les données de simulation
-  const updateSimulationData = (data: Partial<SimulationData>) => {
-    setSimulationData(prev => ({ ...prev, ...data }));
-  };
-  
+
   return (
-    <div className="flex flex-col">
-      {/* Barre de progression */}
-      <div className="px-6 pt-6 pb-2">
-        <Progress value={progressPercentage} className="h-2" />
-        <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-          <span>Étape {currentStepIndex + 1} sur {STEPS.length}</span>
-          <span>{STEPS[currentStepIndex].title}</span>
-        </div>
+    <TooltipProvider>
+      <div className="max-w-4xl mx-auto p-4">
+        <ProgressBar currentStep={currentStep} />
+        
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="mt-8"
+          >
+            {renderStep()}
+          </motion.div>
+        </AnimatePresence>
       </div>
-      
-      {/* Contenu du simulateur */}
-      <Tabs value={currentStep} className="flex-1">
-        <TabsList className="hidden">
-          {STEPS.map(step => (
-            <TabsTrigger key={step.id} value={step.id}>
-              {step.title}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        
-        <TabsContent value="personal-info" className="m-0">
-          <PersonalInfoForm 
-            data={simulationData} 
-            onUpdate={updateSimulationData}
-            onNext={goToNextStep}
-          />
-        </TabsContent>
-        
-        <TabsContent value="income-savings" className="m-0">
-          <IncomeAndSavingsForm 
-            data={simulationData} 
-            onUpdate={updateSimulationData}
-            onNext={goToNextStep}
-            onPrevious={goToPreviousStep}
-          />
-        </TabsContent>
-        
-        <TabsContent value="retirement-goals" className="m-0">
-          <RetirementGoalsForm 
-            data={simulationData} 
-            onUpdate={updateSimulationData}
-            onNext={goToNextStep}
-            onPrevious={goToPreviousStep}
-          />
-        </TabsContent>
-        
-        <TabsContent value="projection-params" className="m-0">
-          <ProjectionParamsForm 
-            data={simulationData} 
-            onUpdate={updateSimulationData}
-            onNext={goToNextStep}
-            onPrevious={goToPreviousStep}
-          />
-        </TabsContent>
-        
-        <TabsContent value="results" className="m-0">
-          <SimulationResults 
-            data={simulationData}
-            onPrevious={goToPreviousStep}
-            onNext={goToNextStep}
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+    </TooltipProvider>
   );
 };
 

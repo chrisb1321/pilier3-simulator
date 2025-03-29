@@ -1,6 +1,8 @@
 import React from 'react';
 import { Button } from '../../lib/ui/button';
 import { SimulationData } from '../SimulatorWizard';
+import { Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
+import { Info } from 'lucide-react';
 
 interface IncomeAndSavingsFormProps {
   data: SimulationData;
@@ -19,9 +21,19 @@ const IncomeAndSavingsForm: React.FC<IncomeAndSavingsFormProps> = ({
     <div className="space-y-6">
       <div className="space-y-4">
         <div>
-          <label htmlFor="annualIncome" className="block text-sm font-medium text-foreground mb-2">
-            Revenu annuel brut (CHF)
-          </label>
+          <div className="flex items-center gap-2 mb-2">
+            <label htmlFor="annualIncome" className="block text-sm font-medium text-foreground">
+              Revenu annuel brut (CHF)
+            </label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Votre revenu annuel avant impôts et déductions</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <input
             id="annualIncome"
             type="number"
@@ -32,9 +44,20 @@ const IncomeAndSavingsForm: React.FC<IncomeAndSavingsFormProps> = ({
         </div>
 
         <div>
-          <label htmlFor="monthlyContribution" className="block text-sm font-medium text-foreground mb-2">
-            Contribution mensuelle au 3ème pilier (CHF)
-          </label>
+          <div className="flex items-center gap-2 mb-2">
+            <label htmlFor="monthlyContribution" className="block text-sm font-medium text-foreground">
+              Contribution mensuelle au 3ème pilier (CHF)
+            </label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Montant total que vous souhaitez épargner chaque mois pour votre retraite</p>
+                <p className="mt-1">Maximum déductible 3a : CHF 588/mois (7'056/an)</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <input
             id="monthlyContribution"
             type="number"
@@ -42,9 +65,6 @@ const IncomeAndSavingsForm: React.FC<IncomeAndSavingsFormProps> = ({
             value={data.monthlyContribution}
             onChange={(e) => onUpdate({ monthlyContribution: Number(e.target.value) })}
           />
-          <p className="text-xs text-muted-foreground mt-1">
-            Montant total que vous souhaitez épargner chaque mois pour votre retraite
-          </p>
         </div>
       </div>
 
