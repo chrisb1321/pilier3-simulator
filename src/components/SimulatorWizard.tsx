@@ -135,8 +135,8 @@ const SimulatorWizard: React.FC = () => {
         <TabsContent value="results" className="m-0">
           <SimulationResults 
             data={simulationData}
-            onRestart={() => setCurrentStep(STEPS[0].id)}
             onPrevious={goToPreviousStep}
+            onNext={goToNextStep}
           />
         </TabsContent>
       </Tabs>
