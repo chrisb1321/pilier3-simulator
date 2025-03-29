@@ -12,162 +12,94 @@ type ProjectionParamsFormProps = {
   onPrevious: () => void;
 };
 
+// Définition des profils de placement
+const INVESTMENT_PROFILES = {
+  conservative: {
+    name: "Conservateur",
+    description: "Privilégie la sécurité avec des rendements stables mais modérés",
+    returns: 2.0,
+  },
+  balanced: {
+    name: "Équilibré",
+    description: "Balance entre sécurité et performance",
+    returns: 3.5,
+  },
+  dynamic: {
+    name: "Dynamique",
+    description: "Vise des rendements plus élevés avec plus de risques",
+    returns: 5.0,
+  },
+};
+
 const ProjectionParamsForm: React.FC<ProjectionParamsFormProps> = ({ 
   data, 
   onUpdate, 
   onNext,
   onPrevious
 }) => {
-  // Définition du schéma de validation avec accès à data
-  const projectionParamsSchema = z.object({
-    expectedReturns3a: z.number()
-      .min(0, { message: "Le rendement ne peut pas être négatif" })
-      .max(10, { message: "Le rendement maximum est de 10%" }),
-    expectedReturns3b: z.number()
-      .min(0, { message: "Le rendement ne peut pas être négatif" })
-      .max(15, { message: "Le rendement maximum est de 15%" }),
-    inflationRate: z.number()
-      .min(0, { message: "L'inflation ne peut pas être négative" })
-      .max(10, { message: "L'inflation maximum est de 10%" }),
-    lifeExpectancy: z.number()
-      .min(data.retirementAge + 1, { message: `L'espérance de vie doit être supérieure à l'âge de retraite` })
-      .max(120, { message: "L'espérance de vie maximum est de 120 ans" }),
-  });
+  // État pour le profil sélectionné
+  const [selectedProfile, setSelectedProfile] = React.useState('balanced');
 
-  // Initialisation du formulaire avec React Hook Form
-  const { 
-    register, 
-    handleSubmit, 
-    formState: { errors },
-    watch
-  } = useForm<z.infer<typeof projectionParamsSchema>>({
-    resolver: zodResolver(projectionParamsSchema),
-    defaultValues: {
-      expectedReturns3a: data.expectedReturns3a,
-      expectedReturns3b: data.expectedReturns3b,
-      inflationRate: data.inflationRate,
-      lifeExpectancy: data.lifeExpectancy,
-    },
-  });
+  // Fonction pour appliquer un profil
+  const applyProfile = (profileKey: keyof typeof INVESTMENT_PROFILES) => {
+    const profile = INVESTMENT_PROFILES[profileKey];
+    setSelectedProfile(profileKey);
+    onUpdate({
+      expectedReturns: profile.returns,
+    });
+  };
 
   // Soumission du formulaire
-  const onSubmit = (formData: z.infer<typeof projectionParamsSchema>) => {
-    onUpdate(formData);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     onNext();
   };
 
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">Paramètres de projection</h2>
+        <h2 className="text-2xl font-bold mb-2">Profil d'investissement</h2>
         <p className="text-muted-foreground">
-          Ajustez les paramètres pour affiner votre simulation financière.
+          Choisissez le profil qui correspond le mieux à votre stratégie d'investissement.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Rendements attendus */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* 3e pilier A */}
-          <div className="space-y-2">
-            <label htmlFor="expectedReturns3a" className="block text-sm font-medium text-foreground">
-              Rendement attendu 3e pilier A (%)
-            </label>
-            <div className="relative">
-              <input
-                id="expectedReturns3a"
-                type="number"
-                step="0.1"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm pr-8"
-                {...register('expectedReturns3a', { valueAsNumber: true })}
-              />
-              <span className="absolute right-3 top-2 text-sm text-muted-foreground">%</span>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-3">
+          {Object.entries(INVESTMENT_PROFILES).map(([key, profile]) => (
+            <div 
+              key={key}
+              className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                selectedProfile === key 
+                  ? 'border-blue-600 bg-blue-50' 
+                  : 'border-gray-200 hover:border-blue-300'
+              }`}
+              onClick={() => applyProfile(key as keyof typeof INVESTMENT_PROFILES)}
+            >
+              <h3 className="font-semibold mb-2">{profile.name}</h3>
+              <p className="text-sm text-muted-foreground mb-4">{profile.description}</p>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Rendement attendu:</span>
+                  <span className="font-medium">{profile.returns}%</span>
+                </div>
+              </div>
             </div>
-            {errors.expectedReturns3a && (
-              <p className="text-sm text-destructive mt-1">{errors.expectedReturns3a.message}</p>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              Rendement moyen historique: 1.5% - 2.5%
-            </p>
-          </div>
-
-          {/* 3e pilier B */}
-          <div className="space-y-2">
-            <label htmlFor="expectedReturns3b" className="block text-sm font-medium text-foreground">
-              Rendement attendu 3e pilier B (%)
-            </label>
-            <div className="relative">
-              <input
-                id="expectedReturns3b"
-                type="number"
-                step="0.1"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm pr-8"
-                {...register('expectedReturns3b', { valueAsNumber: true })}
-              />
-              <span className="absolute right-3 top-2 text-sm text-muted-foreground">%</span>
-            </div>
-            {errors.expectedReturns3b && (
-              <p className="text-sm text-destructive mt-1">{errors.expectedReturns3b.message}</p>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              Rendement moyen historique: 3% - 6%
-            </p>
-          </div>
-        </div>
-
-        {/* Taux d'inflation */}
-        <div className="space-y-2">
-          <label htmlFor="inflationRate" className="block text-sm font-medium text-foreground">
-            Taux d'inflation annuel attendu (%)
-          </label>
-          <div className="relative">
-            <input
-              id="inflationRate"
-              type="number"
-              step="0.1"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm pr-8"
-              {...register('inflationRate', { valueAsNumber: true })}
-            />
-            <span className="absolute right-3 top-2 text-sm text-muted-foreground">%</span>
-          </div>
-          {errors.inflationRate && (
-            <p className="text-sm text-destructive mt-1">{errors.inflationRate.message}</p>
-          )}
-          <p className="text-xs text-muted-foreground mt-1">
-            Inflation moyenne en Suisse: 0.5% - 1.5%
-          </p>
-        </div>
-
-        {/* Espérance de vie */}
-        <div className="space-y-2">
-          <label htmlFor="lifeExpectancy" className="block text-sm font-medium text-foreground">
-            Espérance de vie (ans)
-          </label>
-          <input
-            id="lifeExpectancy"
-            type="number"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            {...register('lifeExpectancy', { valueAsNumber: true })}
-          />
-          {errors.lifeExpectancy && (
-            <p className="text-sm text-destructive mt-1">{errors.lifeExpectancy.message}</p>
-          )}
-          <p className="text-xs text-muted-foreground mt-1">
-            Espérance de vie moyenne en Suisse: 84 ans pour les femmes, 80 ans pour les hommes
-          </p>
+          ))}
         </div>
 
         {/* Informations contextuelles */}
         <div className="bg-muted p-4 rounded-md text-sm">
-          <h3 className="font-medium mb-2">À propos des paramètres</h3>
+          <h3 className="font-medium mb-2">À propos des profils d'investissement</h3>
           <p className="mb-2">
-            Ces paramètres influencent directement la projection de votre épargne retraite. 
-            Des rendements plus élevés augmenteront le capital final, mais comportent plus de risques.
+            Le choix de votre profil d'investissement détermine le potentiel de rendement et le niveau de risque de votre stratégie.
           </p>
-          <p>
-            Le 3ème pilier A offre généralement des rendements plus faibles mais stables, 
-            tandis que le 3ème pilier B permet d'investir dans des actifs à rendement potentiellement plus élevé.
-          </p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>Profil conservateur : Adapté si vous privilégiez la sécurité</li>
+            <li>Profil équilibré : Recommandé pour la plupart des épargnants</li>
+            <li>Profil dynamique : Pour ceux qui acceptent plus de risques</li>
+          </ul>
         </div>
 
         <div className="flex justify-between">

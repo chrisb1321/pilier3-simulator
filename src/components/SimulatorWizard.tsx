@@ -25,20 +25,14 @@ export type SimulationData = {
   
   // Revenus et épargne
   annualIncome: number;
-  currentSavings3a: number;
-  currentSavings3b: number;
-  monthlyContribution3a: number;
-  monthlyContribution3b: number;
+  monthlyContribution: number;
   
   // Objectifs de retraite
   targetRetirementIncome: number;
   targetLifestyle: 'basic' | 'moderate' | 'comfortable' | 'luxury';
   
   // Paramètres de projection
-  expectedReturns3a: number;
-  expectedReturns3b: number;
-  inflationRate: number;
-  lifeExpectancy: number;
+  expectedReturns: number;
 };
 
 // Valeurs par défaut pour la simulation
@@ -47,16 +41,10 @@ const DEFAULT_SIMULATION_DATA: SimulationData = {
   retirementAge: 65,
   gender: 'male',
   annualIncome: 80000,
-  currentSavings3a: 10000,
-  currentSavings3b: 5000,
-  monthlyContribution3a: 500,
-  monthlyContribution3b: 250,
+  monthlyContribution: 750,
   targetRetirementIncome: 5000,
   targetLifestyle: 'moderate',
-  expectedReturns3a: 2.5,
-  expectedReturns3b: 4.0,
-  inflationRate: 1.0,
-  lifeExpectancy: 90
+  expectedReturns: 3.5,
 };
 
 const SimulatorWizard: React.FC = () => {
