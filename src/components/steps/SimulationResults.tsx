@@ -90,6 +90,15 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
     maximumFractionDigits: 0
   }).format(monthlyTotal);
 
+  // Calcul de l'économie fiscale
+  const annualContribution = monthlyTotal * 12;
+  const taxSavings = annualContribution * 0.25; // 25% d'économie d'impôt
+  const formattedTaxSavings = new Intl.NumberFormat('fr-CH', {
+    style: 'currency',
+    currency: 'CHF',
+    maximumFractionDigits: 0
+  }).format(taxSavings);
+
   // Configuration du graphique
   const chartData = {
     labels: projectionData.map(d => d.age),
@@ -192,42 +201,8 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
 
   return (
     <div className="space-y-6 p-6">
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
-          <h3 className="text-2xl font-semibold mb-4">Capital final</h3>
-          <p className="text-4xl font-bold text-primary mb-2">{formattedTotal}</p>
-          <p className="text-sm text-muted-foreground">
-            À l'âge de {data.retirementAge} ans
-          </p>
-        </div>
-
-        <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
-          <h3 className="text-2xl font-semibold mb-4">Contribution mensuelle</h3>
-          <p className="text-4xl font-bold text-primary mb-2">{formattedMonthly}</p>
-          <p className="text-sm text-muted-foreground">
-            Épargne mensuelle totale
-          </p>
-        </div>
-      </div>
-
       <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
-        <h3 className="text-2xl font-semibold mb-4">Évolution du capital</h3>
-        <div className="h-[300px]">
-          <Line data={chartData} options={chartOptions} />
-        </div>
-      </div>
-
-      <div className="bg-muted p-4 rounded-md">
-        <h3 className="font-medium mb-2">Paramètres utilisés</h3>
-        <ul className="list-disc list-inside space-y-1 text-sm">
-          <li>Âge actuel : {data.age} ans</li>
-          <li>Âge de retraite : {data.retirementAge} ans</li>
-          <li>Rendement attendu : {data.expectedReturns}%</li>
-        </ul>
-      </div>
-
-      <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
-        <h3 className="text-2xl font-semibold mb-4">Recevez vos résultats par email</h3>
+        <h3 className="text-2xl font-semibold mb-4">Recevez vos offres 3ème piliers par mail</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -314,6 +289,60 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         {submitStatus === 'error' && (
           <p className="mt-4 text-red-600">Une erreur est survenue. Veuillez réessayer.</p>
         )}
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
+          <h3 className="text-2xl font-semibold mb-4">Capital final</h3>
+          <p className="text-4xl font-bold text-primary mb-2">{formattedTotal}</p>
+          <p className="text-sm text-muted-foreground">
+            À l'âge de {data.retirementAge} ans
+          </p>
+        </div>
+
+        <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
+          <h3 className="text-2xl font-semibold mb-4">Contribution mensuelle</h3>
+          <p className="text-4xl font-bold text-primary mb-2">{formattedMonthly}</p>
+          <p className="text-sm text-muted-foreground">
+            Épargne mensuelle totale
+          </p>
+        </div>
+
+        <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
+          <h3 className="text-2xl font-semibold mb-4">Économie fiscale annuelle</h3>
+          <p className="text-4xl font-bold text-green-600 mb-2">{formattedTaxSavings}</p>
+          <p className="text-sm text-muted-foreground">
+            Basé sur un taux moyen de 25% d'économie d'impôt
+          </p>
+        </div>
+
+        <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
+          <h3 className="text-2xl font-semibold mb-4">Contribution annuelle</h3>
+          <p className="text-4xl font-bold text-primary mb-2">{new Intl.NumberFormat('fr-CH', {
+            style: 'currency',
+            currency: 'CHF',
+            maximumFractionDigits: 0
+          }).format(annualContribution)}</p>
+          <p className="text-sm text-muted-foreground">
+            Montant total investi par année
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
+        <h3 className="text-2xl font-semibold mb-4">Évolution du capital</h3>
+        <div className="h-[300px]">
+          <Line data={chartData} options={chartOptions} />
+        </div>
+      </div>
+
+      <div className="bg-muted p-4 rounded-md">
+        <h3 className="font-medium mb-2">Paramètres utilisés</h3>
+        <ul className="list-disc list-inside space-y-1 text-sm">
+          <li>Âge actuel : {data.age} ans</li>
+          <li>Âge de retraite : {data.retirementAge} ans</li>
+          <li>Rendement attendu : {data.expectedReturns}%</li>
+        </ul>
       </div>
     </div>
   );
