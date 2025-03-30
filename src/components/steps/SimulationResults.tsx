@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '../../lib/ui/button';
 import { SimulationData } from '../SimulatorWizard';
 import { Line } from 'react-chartjs-2';
@@ -13,6 +13,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
+import { motion } from 'framer-motion';
 
 // Enregistrer les composants Chart.js
 ChartJS.register(
@@ -37,6 +38,16 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   onPrevious,
   onNext,
 }) => {
+  const [contactInfo, setContactInfo] = useState({
+    nom: '',
+    prenom: '',
+    email: '',
+    telephone: '',
+    dateNaissance: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
   const calculateProjection = (data: SimulationData) => {
     const yearsUntilRetirement = data.retirementAge - data.age;
     const monthlyContribution = data.monthlyContribution;
@@ -135,6 +146,50 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
     },
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    const webhookData = {
+      informationsPersonnelles: {
+        ...contactInfo,
+        age: data.age,
+        ageRetraite: data.retirementAge,
+      },
+      resultatsSimulation: {
+        capitalProjete: calculateProjection(data),
+        contributionMensuelle: data.monthlyContribution,
+        rendementAttendu: data.expectedReturns
+      },
+      metadata: {
+        dateSimulation: new Date().toISOString(),
+        source: 'simulateur-web',
+        consentementRGPD: true
+      }
+    };
+
+    try {
+      const response = await fetch('https://hooks.zapier.com/hooks/catch/15007154/2c40qr9/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        onNext();
+      } else {
+        setSubmitStatus('error');
+      }
+    } catch (error) {
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="grid gap-6 md:grid-cols-2">
@@ -171,13 +226,94 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         </ul>
       </div>
 
-      <div className="flex justify-between">
-        <Button onClick={onPrevious} variant="outline">
-          Retour
-        </Button>
-        <Button onClick={onNext}>
-          Terminer
-        </Button>
+      <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
+        <h3 className="text-2xl font-semibold mb-4">Recevez vos résultats par email</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="prenom" className="block text-sm font-medium mb-1">Prénom</label>
+              <input
+                id="prenom"
+                type="text"
+                required
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={contactInfo.prenom}
+                onChange={(e) => setContactInfo(prev => ({ ...prev, prenom: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label htmlFor="nom" className="block text-sm font-medium mb-1">Nom</label>
+              <input
+                id="nom"
+                type="text"
+                required
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={contactInfo.nom}
+                onChange={(e) => setContactInfo(prev => ({ ...prev, nom: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="dateNaissance" className="block text-sm font-medium mb-1">Date de naissance</label>
+              <input
+                id="dateNaissance"
+                type="date"
+                required
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={contactInfo.dateNaissance}
+                onChange={(e) => setContactInfo(prev => ({ ...prev, dateNaissance: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label htmlFor="telephone" className="block text-sm font-medium mb-1">Téléphone</label>
+              <input
+                id="telephone"
+                type="tel"
+                required
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={contactInfo.telephone}
+                onChange={(e) => setContactInfo(prev => ({ ...prev, telephone: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+            <input
+              id="email"
+              type="email"
+              required
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={contactInfo.email}
+              onChange={(e) => setContactInfo(prev => ({ ...prev, email: e.target.value }))}
+            />
+          </div>
+          <div className="flex items-start">
+            <input
+              type="checkbox"
+              id="rgpd"
+              required
+              className="mt-1"
+            />
+            <label htmlFor="rgpd" className="ml-2 text-sm">
+              J'accepte que mes données soient utilisées pour recevoir les résultats de ma simulation et être contacté à ce sujet.
+            </label>
+          </div>
+          <div className="flex justify-between items-center">
+            <Button type="button" onClick={onPrevious} variant="outline">
+              Retour
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Envoi en cours...' : 'Recevoir mes résultats'}
+            </Button>
+          </div>
+        </form>
+        {submitStatus === 'success' && (
+          <p className="mt-4 text-green-600">Vos résultats ont été envoyés avec succès !</p>
+        )}
+        {submitStatus === 'error' && (
+          <p className="mt-4 text-red-600">Une erreur est survenue. Veuillez réessayer.</p>
+        )}
       </div>
     </div>
   );
